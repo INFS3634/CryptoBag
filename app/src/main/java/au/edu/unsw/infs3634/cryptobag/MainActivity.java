@@ -4,31 +4,32 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
-import android.widget.Button;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
   private static final String TAG = "MainActivity";
+  private TextView btnLaunchDetailActivity;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
-    int number = 10;
-    Log.d(TAG, "Line 15:: " + String.valueOf(number));
-    Button btnLauncher = findViewById(R.id.btnLaunchActivity);
-    btnLauncher.setOnClickListener(new View.OnClickListener() {
+
+    btnLaunchDetailActivity = findViewById(R.id.tvLaunchDetailActivity);
+    // Implement onClickListener for the button
+    btnLaunchDetailActivity.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        launchDetailActivity("Message from MainActivity");
+        launchDetailActivity("BTC");
       }
     });
   }
 
-  void launchDetailActivity(String message){
+  // Called when user clicks the launch detail activity button
+  private void launchDetailActivity(String message){
     Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-    intent.putExtra("key", message);
+    intent.putExtra(DetailActivity.INTENT_MESSAGE, message);
     startActivity(intent);
   }
 
