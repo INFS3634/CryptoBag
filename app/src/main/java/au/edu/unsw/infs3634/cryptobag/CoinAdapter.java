@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+import au.edu.unsw.infs3634.cryptobag.API.Coin;
+
 public class CoinAdapter extends RecyclerView.Adapter<CoinAdapter.CoinViewHolder> implements Filterable {
   private ArrayList<Coin> mCoins, mCoinsFiltered;
   private RecyclerViewListener mListener;

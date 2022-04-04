@@ -11,7 +11,14 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.SearchView;
-import android.widget.TextView;
+
+import com.google.gson.Gson;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import au.edu.unsw.infs3634.cryptobag.API.Coin;
+import au.edu.unsw.infs3634.cryptobag.API.CoinLoreResponse;
 
 public class MainActivity extends AppCompatActivity {
   private static final String TAG = "MainActivity";
@@ -41,8 +48,14 @@ public class MainActivity extends AppCompatActivity {
         launchDetailActivity(coinSymbol);
       }
     };
+
+    // Implement GSON library to convert JSON string to JAVA object
+    Gson gson = new Gson();
+    CoinLoreResponse response = gson.fromJson(CoinLoreResponse.jsonData, CoinLoreResponse.class);
+    List<Coin> coins = response.getData();
+
     // Create an adapter instance and supply the coins data to be displayed
-    mAdapter = new CoinAdapter(Coin.getCoins(), listener);
+    mAdapter = new CoinAdapter((ArrayList<Coin>) coins, listener);
     mAdapter.sort(CoinAdapter.SORT_METHOD_NAME);
     // Connect the adapter with the RecyclerView
     mRecyclerView.setAdapter(mAdapter);
