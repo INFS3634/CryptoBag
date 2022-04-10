@@ -10,6 +10,8 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+
 import java.text.NumberFormat;
 import java.util.List;
 
@@ -34,7 +36,7 @@ public class DetailActivity extends AppCompatActivity {
     private TextView mMarketcap;
     private TextView mVolume;
     private ImageView mSearch;
-
+    private ImageView mArt;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +44,8 @@ public class DetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_detail);
 
         // Get handle for view elements
+        mArt = findViewById(R.id.ivImage);
+
         mName = findViewById(R.id.tvName);
         mSymbol = findViewById(R.id.tvSymbol);
         mValue = findViewById(R.id.tvValueField);
@@ -76,6 +80,10 @@ public class DetailActivity extends AppCompatActivity {
                             NumberFormat formatter = NumberFormat.getCurrencyInstance();
                             setTitle(coin.getName());
                             mName.setText(coin.getName());
+                            Glide.with(DetailActivity.this)
+                                    .load("https://www.coinlore.com/img/" + coin.getNameid() + ".png")
+                                    .fitCenter()
+                                    .into(mArt);
                             mSymbol.setText(coin.getSymbol());
                             mValue.setText(formatter.format(Double.valueOf(coin.getPriceUsd())));
                             mChange1h.setText(String.valueOf(coin.getPercentChange1h()) + " %");
