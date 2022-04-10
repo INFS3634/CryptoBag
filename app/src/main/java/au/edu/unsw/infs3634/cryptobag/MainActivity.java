@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -19,6 +20,12 @@ import java.util.List;
 
 import au.edu.unsw.infs3634.cryptobag.API.Coin;
 import au.edu.unsw.infs3634.cryptobag.API.CoinLoreResponse;
+import au.edu.unsw.infs3634.cryptobag.API.CoinService;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
   private static final String TAG = "MainActivity";
@@ -49,17 +56,35 @@ public class MainActivity extends AppCompatActivity {
       }
     };
 
-    // Implement GSON library to convert JSON string to JAVA object
-    Gson gson = new Gson();
-    CoinLoreResponse response = gson.fromJson(CoinLoreResponse.jsonData, CoinLoreResponse.class);
-    List<Coin> coins = response.getData();
+    // Create an adapter instance with an empty ArrayList of Coin objects
+    mAdapter = new CoinAdapter(new ArrayList<Coin>(), listener);
 
-    // Create an adapter instance and supply the coins data to be displayed
-    mAdapter = new CoinAdapter((ArrayList<Coin>) coins, listener);
-    mAdapter.sort(CoinAdapter.SORT_METHOD_NAME);
-    // Connect the adapter with the RecyclerView
-    mRecyclerView.setAdapter(mAdapter);
+    // Implement Retrofit to make API call
+    Retrofit retrofit = new Retrofit.Builder()
+            .baseUrl("https://api.coinlore.net") // Set the base URL
+            .addConverterFactory(GsonConverterFactory.create())
+            .build();
 
+    // Create object for the service interface
+    CoinService service = retrofit.create(CoinService.class);
+    Call<CoinLoreResponse> responseCall = service.getResponse();
+    responseCall.enqueue(new Callback<CoinLoreResponse>() {
+      @Override
+      public void onResponse(Call<CoinLoreResponse> call, Response<CoinLoreResponse> response) {
+        Log.d(TAG, "API call successful!");
+        List<Coin> coins = response.body().getData();
+        // Supply data to the adapter to be displayed
+        mAdapter.setData((ArrayList)coins);
+        mAdapter.sort(CoinAdapter.SORT_METHOD_NAME);
+        // Connect the adapter with the RecyclerView
+        mRecyclerView.setAdapter(mAdapter);
+      }
+
+      @Override
+      public void onFailure(Call<CoinLoreResponse> call, Throwable t) {
+        Log.d(TAG, "API call failure.");
+      }
+    });
   }
 
   @Override

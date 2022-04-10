@@ -11,8 +11,16 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.text.NumberFormat;
+import java.util.List;
 
 import au.edu.unsw.infs3634.cryptobag.API.Coin;
+import au.edu.unsw.infs3634.cryptobag.API.CoinLoreResponse;
+import au.edu.unsw.infs3634.cryptobag.API.CoinService;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class DetailActivity extends AppCompatActivity {
     public static final String INTENT_MESSAGE = "intent_message";
@@ -49,25 +57,48 @@ public class DetailActivity extends AppCompatActivity {
         if (intent.hasExtra(INTENT_MESSAGE)) {
             String coinSymbol = intent.getStringExtra(INTENT_MESSAGE);
             Log.d(TAG, "INTENT_MESSAGE = " + coinSymbol);
-            Coin coin = Coin.findCoin(coinSymbol);
-            if(coin != null) {
-                NumberFormat formatter = NumberFormat.getCurrencyInstance();
-                setTitle(coin.getName());
-                mName.setText(coin.getName());
-                mSymbol.setText(coin.getSymbol());
-                mValue.setText(formatter.format(Double.valueOf(coin.getPriceUsd())));
-                mChange1h.setText(coin.getPercentChange1h() + " %");
-                mChange24h.setText(coin.getPercentChange24h() + " %");
-                mChange7d.setText(coin.getPercentChange7d() + " %");
-                mMarketcap.setText(formatter.format(Double.valueOf(coin.getMarketCapUsd())));
-                mVolume.setText(formatter.format(coin.getVolume24()));
-                mSearch.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        searchCoin(coin.getName());
+            // Implement Retrofit to make API call
+            Retrofit retrofit = new Retrofit.Builder()
+                    .baseUrl("https://api.coinlore.net") // Set the base URL
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+
+            // Create object for our interface
+            CoinService service = retrofit.create(CoinService.class);
+            Call<CoinLoreResponse> responseCall = service.getResponse();
+            responseCall.enqueue(new Callback<CoinLoreResponse>() {
+                @Override
+                public void onResponse(Call<CoinLoreResponse> call, Response<CoinLoreResponse> response) {
+                    Log.d(TAG, "API call successful!");
+                    List<Coin> coins = response.body().getData();
+                    for (final Coin coin : coins) {
+                        if (coin.getSymbol().equals(coinSymbol)) {
+                            NumberFormat formatter = NumberFormat.getCurrencyInstance();
+                            setTitle(coin.getName());
+                            mName.setText(coin.getName());
+                            mSymbol.setText(coin.getSymbol());
+                            mValue.setText(formatter.format(Double.valueOf(coin.getPriceUsd())));
+                            mChange1h.setText(String.valueOf(coin.getPercentChange1h()) + " %");
+                            mChange24h.setText(String.valueOf(coin.getPercentChange24h()) + " %");
+                            mChange7d.setText(String.valueOf(coin.getPercentChange7d()) + " %");
+                            mMarketcap.setText(formatter.format(Double.valueOf(coin.getMarketCapUsd())));
+                            mVolume.setText(formatter.format(coin.getVolume24()));
+                            mSearch.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    searchCoin(coin.getName());
+                                }
+                            });
+                            break;
+                        }
                     }
-                });
-            }
+                }
+
+                @Override
+                public void onFailure(Call<CoinLoreResponse> call, Throwable t) {
+
+                }
+            });
         }
     }
 

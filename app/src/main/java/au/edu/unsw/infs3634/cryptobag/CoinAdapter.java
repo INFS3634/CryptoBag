@@ -130,4 +130,12 @@ public class CoinAdapter extends RecyclerView.Adapter<CoinAdapter.CoinViewHolder
     }
     notifyDataSetChanged();
   }
+
+  // Set the supplied data to the adapter
+  public void setData(ArrayList<Coin> data) {
+    mCoins.clear();
+    mCoins.addAll(data);
+    notifyDataSetChanged();
+  }
+
 }

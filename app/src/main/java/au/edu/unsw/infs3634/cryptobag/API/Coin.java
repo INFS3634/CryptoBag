@@ -185,19 +185,4 @@ public class Coin {
     this.msupply = msupply;
   }
 
-  // Return a coin by looking up its symbol
-  public static Coin findCoin(String symbol) {
-    // Get the coin list from CoinLoreResponse json string
-    Gson gson = new Gson();
-    CoinLoreResponse response = gson.fromJson(CoinLoreResponse.jsonData, CoinLoreResponse.class);
-    List<Coin> coins = response.getData();
-    for(final Coin coin : coins) {
-      if(coin.getSymbol().equals(symbol)) {
-        return coin;
-      }
-    }
-    return null;
-  }
-
-
 }
