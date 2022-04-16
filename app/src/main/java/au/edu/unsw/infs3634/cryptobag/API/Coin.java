@@ -1,16 +1,24 @@
 package au.edu.unsw.infs3634.cryptobag.API;
 
+import androidx.annotation.NonNull;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
 import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
+@Entity
 public class Coin {
 
+  @PrimaryKey
+  @NonNull
   @SerializedName("id")
   @Expose
   private String id;
+
   @SerializedName("symbol")
   @Expose
   private String symbol;

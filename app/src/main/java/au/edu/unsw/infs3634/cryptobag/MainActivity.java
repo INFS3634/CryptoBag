@@ -3,6 +3,7 @@ package au.edu.unsw.infs3634.cryptobag;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.room.Room;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -17,10 +18,12 @@ import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 import au.edu.unsw.infs3634.cryptobag.API.Coin;
 import au.edu.unsw.infs3634.cryptobag.API.CoinLoreResponse;
 import au.edu.unsw.infs3634.cryptobag.API.CoinService;
+import au.edu.unsw.infs3634.cryptobag.DB.CoinDatabase;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -32,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
   private RecyclerView mRecyclerView;
   private CoinAdapter mAdapter;
   private RecyclerView.LayoutManager mLayoutManager;
+  private CoinDatabase mDb;
 
 
   @Override
@@ -58,6 +62,22 @@ public class MainActivity extends AppCompatActivity {
 
     // Create an adapter instance with an empty ArrayList of Coin objects
     mAdapter = new CoinAdapter(new ArrayList<Coin>(), listener);
+    mRecyclerView.setAdapter(mAdapter);
+
+    // Initialise the database
+    mDb = Room.databaseBuilder(getApplicationContext(), CoinDatabase.class, "coin-database")
+            .build();
+    // Create an asynchronous database call using Java Runnable to
+    // get the list of coins from the database
+    // Set the adapter using the result
+    Executors.newSingleThreadExecutor().execute(new Runnable() {
+      @Override
+      public void run() {
+        ArrayList<Coin> coins = (ArrayList<Coin>) mDb.coinDao().getCoins();
+        mAdapter.setData(coins);
+        mAdapter.sort(CoinAdapter.SORT_METHOD_NAME);
+      }
+    });
 
     // Implement Retrofit to make API call
     Retrofit retrofit = new Retrofit.Builder()
@@ -73,6 +93,16 @@ public class MainActivity extends AppCompatActivity {
       public void onResponse(Call<CoinLoreResponse> call, Response<CoinLoreResponse> response) {
         Log.d(TAG, "API call successful!");
         List<Coin> coins = response.body().getData();
+        Executors.newSingleThreadExecutor().execute(new Runnable() {
+          @Override
+          public void run() {
+            // Delete all rows currently in your coins entity in the Database
+            mDb.coinDao().deleteCoins(mDb.coinDao().getCoins().toArray(new Coin[0]));
+            // Add all rows from the List<Coin> you created from the HTTP request to the Database
+            mDb.coinDao().insertCoins(coins.toArray(new Coin[0]));
+          }
+        });
+
         // Supply data to the adapter to be displayed
         mAdapter.setData((ArrayList)coins);
         mAdapter.sort(CoinAdapter.SORT_METHOD_NAME);

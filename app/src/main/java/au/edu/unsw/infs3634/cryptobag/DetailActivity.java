@@ -1,6 +1,7 @@
 package au.edu.unsw.infs3634.cryptobag;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.room.Room;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -14,10 +15,12 @@ import com.bumptech.glide.Glide;
 
 import java.text.NumberFormat;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 import au.edu.unsw.infs3634.cryptobag.API.Coin;
 import au.edu.unsw.infs3634.cryptobag.API.CoinLoreResponse;
 import au.edu.unsw.infs3634.cryptobag.API.CoinService;
+import au.edu.unsw.infs3634.cryptobag.DB.CoinDatabase;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -37,6 +40,7 @@ public class DetailActivity extends AppCompatActivity {
     private TextView mVolume;
     private ImageView mSearch;
     private ImageView mArt;
+    private CoinDatabase mDb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,23 +65,18 @@ public class DetailActivity extends AppCompatActivity {
         if (intent.hasExtra(INTENT_MESSAGE)) {
             String coinSymbol = intent.getStringExtra(INTENT_MESSAGE);
             Log.d(TAG, "INTENT_MESSAGE = " + coinSymbol);
-            // Implement Retrofit to make API call
-            Retrofit retrofit = new Retrofit.Builder()
-                    .baseUrl("https://api.coinlore.net") // Set the base URL
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build();
 
-            // Create object for our interface
-            CoinService service = retrofit.create(CoinService.class);
-            Call<CoinLoreResponse> responseCall = service.getResponse();
-            responseCall.enqueue(new Callback<CoinLoreResponse>() {
+            // Create a CoinDatabase Object
+            mDb = Room.databaseBuilder(getApplicationContext(), CoinDatabase.class, "coin-database")
+                    .build();
+            Executors.newSingleThreadExecutor().execute(new Runnable() {
                 @Override
-                public void onResponse(Call<CoinLoreResponse> call, Response<CoinLoreResponse> response) {
-                    Log.d(TAG, "API call successful!");
-                    List<Coin> coins = response.body().getData();
-                    for (final Coin coin : coins) {
-                        if (coin.getSymbol().equals(coinSymbol)) {
-                            NumberFormat formatter = NumberFormat.getCurrencyInstance();
+                public void run() {
+                    Coin coin = mDb.coinDao().getCoin(coinSymbol);
+                    NumberFormat formatter = NumberFormat.getCurrencyInstance();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
                             setTitle(coin.getName());
                             mName.setText(coin.getName());
                             Glide.with(DetailActivity.this)
@@ -97,16 +96,11 @@ public class DetailActivity extends AppCompatActivity {
                                     searchCoin(coin.getName());
                                 }
                             });
-                            break;
                         }
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<CoinLoreResponse> call, Throwable t) {
-
+                    });
                 }
             });
+
         }
     }
 
