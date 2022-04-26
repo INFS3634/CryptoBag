@@ -144,5 +144,13 @@
         app:layout_constraintStart_toStartOf="@+id/tvName"
         app:layout_constraintTop_toTopOf="@+id/tvVolumeName" />
 
+    <CheckBox
+        android:id="@+id/cbCoin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="CheckBox"
+        app:layout_constraintStart_toStartOf="@+id/tvVolumeName"
+        app:layout_constraintTop_toBottomOf="@+id/tvVolumeName" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

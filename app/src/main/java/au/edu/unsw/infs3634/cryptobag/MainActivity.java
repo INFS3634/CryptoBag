@@ -1,5 +1,6 @@
 package au.edu.unsw.infs3634.cryptobag;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -13,7 +14,14 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.SearchView;
+import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
@@ -106,8 +114,26 @@ public class MainActivity extends AppCompatActivity {
         // Supply data to the adapter to be displayed
         mAdapter.setData((ArrayList)coins);
         mAdapter.sort(CoinAdapter.SORT_METHOD_NAME);
-        // Connect the adapter with the RecyclerView
-        mRecyclerView.setAdapter(mAdapter);
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        DatabaseReference messageRef = database.getReference(FirebaseAuth.getInstance().getUid());
+        messageRef.addListenerForSingleValueEvent(new ValueEventListener() {
+          @Override
+          public void onDataChange(@NonNull DataSnapshot snapshot) {
+            String result = (String) snapshot.getValue();
+            if (result != null) {
+              for(Coin coin : coins) {
+                if(coin.getSymbol().equals(result)) {
+                  Toast.makeText(MainActivity.this, coin.getName() + ": $" + coin.getPriceUsd(), Toast.LENGTH_LONG).show();
+                }
+              }
+            }
+          }
+
+          @Override
+          public void onCancelled(@NonNull DatabaseError error) {
+
+          }
+        });
       }
 
       @Override

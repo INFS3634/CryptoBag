@@ -1,5 +1,6 @@
 package au.edu.unsw.infs3634.cryptobag;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.room.Room;
 
@@ -8,10 +9,18 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.text.NumberFormat;
 import java.util.List;
@@ -41,6 +50,8 @@ public class DetailActivity extends AppCompatActivity {
     private ImageView mSearch;
     private ImageView mArt;
     private CoinDatabase mDb;
+    private CheckBox mCoin;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +70,8 @@ public class DetailActivity extends AppCompatActivity {
         mMarketcap = findViewById(R.id.tvMarketcapField);
         mVolume = findViewById(R.id.tvVolumeField);
         mSearch = findViewById(R.id.ivSearch);
+        mCoin = findViewById(R.id.cbCoin);
+
 
         // Get the intent that started this activity
         Intent intent = getIntent();
@@ -96,6 +109,36 @@ public class DetailActivity extends AppCompatActivity {
                                     searchCoin(coin.getName());
                                 }
                             });
+                            FirebaseDatabase database = FirebaseDatabase.getInstance();
+                            DatabaseReference messageRef = database.getReference(FirebaseAuth.getInstance().getUid());
+                            messageRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                    String result = (String) snapshot.getValue();
+                                    if(result != null && result.equals(coin.getSymbol())) {
+                                        mCoin.setChecked(true);
+                                    } else {
+                                        mCoin.setChecked(false);
+                                    }
+                                }
+
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError error) {
+
+                                }
+                            });
+                            mCoin.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                                @Override
+                                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                                    DatabaseReference messageRef = database.getReference(FirebaseAuth.getInstance().getUid());
+                                    if(isChecked){
+                                        messageRef.setValue(coin.getSymbol());
+                                    } else {
+                                        messageRef.setValue("");
+                                    }
+                                }
+                            });
+
                         }
                     });
                 }
